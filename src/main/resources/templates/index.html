@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon.png">
+    <link rel="stylesheet" href="css/index/styles.css">
+    <link rel="stylesheet" href="css/index/media.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <title>CharChat</title>
+</head>
+<body>
+    <div class="menu-bg" id="menu-bg"></div>
+    <div class="load-error" id="load-error">Ошибка загрузки...</div>
+    <main>
+        <div class="chats" id="chats">
+            <div class="settings">
+                <p onclick="openMyProfile()"><span>[</span>Профиль<span>]</span></p>
+                <p onclick="openSettings()"><span>[</span>Настройки<span>]</span></p>
+                <p onclick="openCreateChat()"><span>[</span>Создать чат<span>]</span></p>
+            </div>
+        </div>
+
+        <div class="active-chat" id="active-chat">
+            <div class="chat-data" id="chat-data"></div>
+            <div class="messages" id="messages"></div>
+        </div>
+    </main>
+    <div class="input">
+        <div class="commands-tips" id="commands-tips">
+            <p><span>[</span>/help<span>]</span></p>
+            <p><span>[</span>/sendall<span>]</span></p>
+        </div>
+        > <input type="text" placeholder="ввод" id="input" autocomplete="off"> <p onclick="sendMessage()"><span>[</span>отправить<span>]</span></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://unpkg.com/cookielib/src/cookie.js"></script>
+    <script src="js/index/varables.js"></script>
+    <script src="js/index/ui.js"></script>
+    <script src="js/index/socket.js"></script>
+    <script src="js/index/scripts.js"></script>
+    <script src="js/index/commands.js"></script>
+</body>
+</html>

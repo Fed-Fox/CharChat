@@ -1,0 +1,35 @@
+@media (max-width:730px) {
+
+    * {
+        font-size: 12pt !important;
+    }
+
+    main {
+        height: calc(100% - 40px) !important;
+    }
+
+    .messages {
+        width: calc(100% - 20px) !important;
+        padding: 10px 10px 10px 10px !important;
+    }
+
+    .chats {
+        width: 100% !important;
+    }
+
+    .active-chat {
+        display: none;
+        width: 100%;
+    }
+
+    .chat-data {
+        & h2 {
+            display: block !important;
+        }
+    }
+
+    .input {
+        height: 40px !important;
+    }
+
+}
