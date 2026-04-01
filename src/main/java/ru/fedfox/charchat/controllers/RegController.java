@@ -1,6 +1,6 @@
 package ru.fedfox.charchat.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,9 +10,9 @@ import ru.fedfox.charchat.models.user.User;
 import ru.fedfox.charchat.service.Service;
 
 @Controller
+@AllArgsConstructor
 public class RegController {
 
-    @Autowired
     private Service service;
 
 

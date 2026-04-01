@@ -19,9 +19,8 @@ public class MessageNotification implements Notification {
 
     public MessageNotification(Message message) {
         this.chatId = message.getChatId();
-        this.sender = message.getUserName();
         this.content = message.getContent();
-        this.time = message.getTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+        this.time = message.getTimestamp().toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
         this.type = message.getType();
     }
 

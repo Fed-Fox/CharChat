@@ -1,12 +1,13 @@
 package ru.fedfox.charchat.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import ru.fedfox.charchat.dal.Repository;
 import ru.fedfox.charchat.enums.NotificationType;
-import ru.fedfox.charchat.enums.UserStatus;
 import ru.fedfox.charchat.exeptions.ExistExeption;
 import ru.fedfox.charchat.exeptions.NotFoundExeption;
 import ru.fedfox.charchat.exeptions.ValidationExeption;
@@ -17,84 +18,69 @@ import ru.fedfox.charchat.models.message.MessageNotification;
 import ru.fedfox.charchat.models.user.Profile;
 import ru.fedfox.charchat.models.user.User;
 import ru.fedfox.charchat.models.user.UserMe;
-import ru.fedfox.charchat.storage.Storage;
-import ru.fedfox.charchat.utils.KeysGeneration;
 import ru.fedfox.charchat.utils.TextValidator;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
 @org.springframework.stereotype.Service
+@AllArgsConstructor
 public class Service {
 
-    private Storage storage;
-
-    public Service(Storage storage) {
-        this.storage = storage;
-
-        storage.addUser(new User(
-                "",
-                "",
-                "fedfox",
-                "FedFox",
-                "FedFox3000",
-                "foxyfedor3000@gmail.com",
-                UserStatus.ONLINE,
-                new ArrayList<>()
-        ));
-
-        storage.addUser(new User(
-                "",
-                "",
-                "tester",
-                "Testировщик",
-                "FedFox3000",
-                "test@gmail.com",
-                UserStatus.ONLINE,
-                new ArrayList<>()
-        ));
-    }
+    private Repository repository;
 
     public ResponseEntity<?> wsMessageResponse(Message message, SimpMessagingTemplate messagingTemplate) {
         if (TextValidator.textValidationMessage(message.getContent())) {
             throw new ValidationExeption("Некорректный ввод");
         }
 
-        if (!storage.containsCookies(message.getUserId())) {
+        Optional<User> sender = repository.getUser(message.getUserId());
+
+        Optional<Chat> chat = repository.getChat(message.getChatId());
+
+        if (sender.isEmpty()) {
             throw new NotFoundExeption("Сессия не найдена!");
         }
 
-        if (!storage.containsChat(message.getChatId())) {
-            throw new NotFoundExeption("Сессия не найдена!");
+        if (chat.isEmpty()) {
+            throw new NotFoundExeption("Чат не найден!");
+        }
+
+        if (!repository.userHasChat(message.getChatId(), message.getUserId())) {
+            throw new ValidationExeption("Чат не найден у пользователя!");
+        }
+
+        Optional<User> soeUser = repository.getUser(repository.getSoEChatMember(chat.get(), sender.get().getId()));
+
+        if (soeUser.isEmpty()) {
+            throw new NotFoundExeption("Сессия не найдена");
         }
 
         message.setType(NotificationType.MESSAGE);
 
-        storage.addMessage(message);
+        message.setTimestamp(Timestamp.valueOf(LocalDateTime.now()));
 
-        User starterUser = storage.getUser(storage.getChat(message.getChatId()).getStarter());
+        repository.addMessage(message);
 
-        User enderUser = storage.getUser(storage.getChat(message.getChatId()).getEnder());
-
-        User sender = storage.getUser(message.getUserId());
-
-        messagingTemplate.convertAndSend("/topic/user/" + starterUser.getWsid(),
+        messagingTemplate.convertAndSend("/topic/user/" + soeUser.get().getWsid(),
                 new MessageNotification(
                         message.getChatId(),
-                        sender.getDisplayName(),
+                        sender.get().getDisplayName(),
                         message.getContent(),
-                        message.getTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                        message.getTimestamp().toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")),
                         message.getType()
                 )
         );
 
-        messagingTemplate.convertAndSend("/topic/user/" + enderUser.getWsid(),
+        messagingTemplate.convertAndSend("/topic/user/" + sender.get().getWsid(),
                 new MessageNotification(
                         message.getChatId(),
-                        sender.getDisplayName(),
+                        sender.get().getDisplayName(),
                         message.getContent(),
-                        message.getTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                        message.getTimestamp().toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")),
                         message.getType()
                 )
         );
@@ -102,13 +88,15 @@ public class Service {
         return ResponseEntity.ok().build();
     }
 
-    public List<ChatNotification> getChatsByUser(String data) {
-        if (storage.containsCookies(data)) {
-            return storage.getListChatsByUser(data);
+    public List<ChatNotification> getChatsByUser(String session) {
+        if (repository.getUser(session).isPresent()) {
+            return repository.getListChatsByUser(session);
         }
 
         throw new NotFoundExeption("Сессия не найдена!");
     }
+
+    /* В НАСТОЯЩИЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТЬСЯ ИЗ-ЗА ПОЛЬЗОВАТЕЛЬСКОГО СОХРАНЕНРИЯ СООБЩЕНИЙ
 
     public ArrayList<MessageNotification> getMessagesFromChat(String session, String chatId) {
         if (storage.containsCookies(session)) {
@@ -124,13 +112,20 @@ public class Service {
         throw new NotFoundExeption("Сессия не найдена!");
     }
 
+
+     */
+
     public Map<String, Object> validateCookiesAndGetMe(String session) {
         Map<String, Object> map = new HashMap<>();
 
-        if (storage.containsCookies(session)) {
-            storage.genUserWsId(session);
-            map.put("user", new UserMe(storage.getUser(session)));
+        Optional<User> user = repository.getUser(session);
+
+        if (user.isPresent()) {
+            user.get().setWsid(repository.genUserWsId(session));
+            map.put("user", new UserMe(user.get()));
             map.put("validate", true);
+
+            log.info(String.format("Пользователь %s вошёл в свой аккаунт по cookies", user.get().getTag()));
         } else {
             map.put("validate", false);
         }
@@ -141,8 +136,12 @@ public class Service {
     public Map<String, Object> validateLoginCookies(String session) {
         Map<String, Object> map = new HashMap<>();
 
-        if (storage.containsCookies(session)) {
+        Optional<User> user = repository.getUser(session);
+
+        if (user.isPresent()) {
             map.put("validate", true);
+
+            log.info(String.format("Пользователь %s вошёл в свой аккаунт по cookies", user.get().getTag()));
         } else {
             map.put("validate", false);
         }
@@ -151,62 +150,63 @@ public class Service {
     }
 
     public Profile getUserProfile(String session, String chatId) {
-        if (!storage.containsCookies(session)) {
+        Optional<User> sender = repository.getUser(session);
+
+        Optional<Chat> chat = repository.getChat(chatId);
+
+        if (sender.isEmpty()) {
             throw new NotFoundExeption("Сессия не найдена!");
         }
 
-        if (!storage.containsCookies(session)) {
-            throw new NotFoundExeption("Сессия не найдена!");
+        if (chat.isEmpty()) {
+            throw new NotFoundExeption("Чат не найден!");
         }
 
         return new Profile(
-                storage.getSoEChatMember(chatId, session)
+                repository.getUser(repository.getSoEChatMember(chat.get(), session)).get()
         );
     }
 
     public Map<String, Object> createChatWithUser(String session, String tag, SimpMessagingTemplate messagingTemplate) {
-        if (!storage.containsCookies(session)) {
+        Optional<User> starter = repository.getUser(session);
+
+        if (starter.isEmpty()) {
             throw new NotFoundExeption("Сессия не найдена!");
         }
 
-        User fromUser = storage.getUser(session);
+        Optional<User> ender = repository.getUserByTag(tag);
 
-        User toUser = storage.getUserByTag(tag);
-
-        if (toUser == null) {
+        if (ender.isEmpty()) {
             throw new NotFoundExeption("Тег не найден");
         }
 
-        if (storage.hasChatWithUsers(fromUser, toUser)) {
+        if (repository.hasChatWithUsers(starter.get(), ender.get())) {
             throw new ExistExeption("Чат уже существует");
         }
 
-        Chat chat = storage.addChat(new Chat(
+        Chat chat = repository.addChat(new Chat(
                 "",
-                new ArrayList<>(),
-                fromUser.getId(),
-                toUser.getId()
+                starter.get().getId(),
+                ender.get().getId()
         ));
 
-        List<MessageNotification> messages = storage.getMessageNotificationsByChat(chat.getId());
+        List<MessageNotification> messages = new ArrayList<>();
 
-        messages = messages.subList(0, Math.min(messages.size(), 100));
-
-        messagingTemplate.convertAndSend("/topic/user/" + fromUser.getWsid(),
+        messagingTemplate.convertAndSend("/topic/user/" + starter.get().getWsid(),
                 new ChatNotification(
                         chat.getId(),
-                        toUser.getDisplayName(),
-                        toUser.getStatus(),
+                        ender.get().getDisplayName(),
+                        ender.get().getStatus(),
                         NotificationType.NEW_CHAT,
                         messages
                 )
         );
 
-        messagingTemplate.convertAndSend("/topic/user/" + toUser.getWsid(),
+        messagingTemplate.convertAndSend("/topic/user/" + ender.get().getWsid(),
                 new ChatNotification(
                         chat.getId(),
-                        fromUser.getDisplayName(),
-                        fromUser.getStatus(),
+                        starter.get().getDisplayName(),
+                        starter.get().getStatus(),
                         NotificationType.NEW_CHAT,
                         messages
                 )
@@ -216,13 +216,15 @@ public class Service {
 
         body.put("success", true);
 
+        log.info(String.format("Создан новый чат между пользователями %s и %s", starter.get().getTag(), ender.get().getTag()));
+
         return body;
     }
 
     public ResponseEntity<?> validateLogin(User user) {
-        User userbd = storage.getUserByEmail(user.getMail());
+        Optional<User> userbd = repository.getUserByMail(user.getMail());
 
-        if (userbd == null || !userbd.getPassword().equals(user.getPassword())) {
+        if (userbd.isEmpty() || !userbd.get().getPassword().equals(user.getPassword())) {
             throw new NotFoundExeption("Ошибка логина или пароля");
         }
 
@@ -230,7 +232,7 @@ public class Service {
             throw new ValidationExeption("Некоректные данные");
         }
 
-        ResponseCookie rc = ResponseCookie.from("session", userbd.getId())
+        ResponseCookie rc = ResponseCookie.from("session", userbd.get().getId())
                 .httpOnly(false)
                 .secure(false)
                 .path("/")
@@ -242,15 +244,17 @@ public class Service {
 
         body.put("success", true);
 
+        log.info(String.format("Пользователь %s вошёл в свой аккаунт", userbd.get().getTag()));
+
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, rc.toString()).body(body);
     }
 
     public ResponseEntity<?> validateReg(User user) {
-        if (storage.containsTag(user.getTag())) {
+        if (repository.containsTag(user.getTag())) {
             throw new ExistExeption("Такой тег уже существует!");
         }
 
-        if (storage.containsEmail(user.getMail())) {
+        if (repository.containsEmail(user.getMail())) {
             throw new ExistExeption("Такая почта уже зарегестрирована!");
         }
 
@@ -261,7 +265,9 @@ public class Service {
             throw new ValidationExeption("Некоректные данные");
         }
 
-        ResponseCookie rc = ResponseCookie.from("session", storage.addUser(user))
+        User userbd = repository.addUser(user);
+
+        ResponseCookie rc = ResponseCookie.from("session", user.getId())
                 .httpOnly(false)
                 .secure(false)
                 .path("/")
@@ -272,6 +278,8 @@ public class Service {
         Map<String, Object> body = new HashMap<>();
 
         body.put("success", true);
+
+        log.info(String.format("Пользователь %s зарегистрировал в свой аккаунт", userbd.getTag()));
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, rc.toString()).body(body);
     }

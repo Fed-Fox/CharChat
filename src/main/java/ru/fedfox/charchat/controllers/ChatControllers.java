@@ -1,8 +1,7 @@
 package ru.fedfox.charchat.controllers;
 
-import lombok.NonNull;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -13,22 +12,15 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import ru.fedfox.charchat.models.chat.Chat;
-import ru.fedfox.charchat.models.chat.ChatNotification;
 import ru.fedfox.charchat.models.message.Message;
-import ru.fedfox.charchat.models.message.MessageNotification;
 import ru.fedfox.charchat.service.Service;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 @Slf4j
 @Controller
+@AllArgsConstructor
 public class ChatControllers {
 
-    @Autowired
     private SimpMessagingTemplate messagingTemplate;
-    @Autowired
     private Service service;
 
 
@@ -49,10 +41,14 @@ public class ChatControllers {
         return ResponseEntity.ok(service.getChatsByUser(data));
     }
 
+    /* В НАСТОЯЩИЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТЬСЯ ИЗ-ЗА ПОЛЬЗОВАТЕЛЬСКОГО СОХРАНЕНРИЯ СООБЩЕНИЙ
+
     @GetMapping("/app/messages/{chatId}")
     public ResponseEntity<?> getMessagesFromChat(@CookieValue(value = "session") String session, @PathVariable String chatId) {
         return ResponseEntity.ok(service.getMessagesFromChat(session, chatId));
     }
+
+     */
 
     @GetMapping("/app/validate-cookies/")
     public ResponseEntity<?> validateCookies(@CookieValue(value = "session") String session) {
