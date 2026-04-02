@@ -209,7 +209,11 @@ function openSettings() {
     })
 
     themeInput.addEventListener('change', (event) => {
-        setCookie("theme", event.target.value);
+        let date = new Date();
+
+        date.setDate(date.getFullYear() + 1)
+
+        setCookie("theme", event.target.value, {expires: date});
     })
 
     menuBgElement.style.display = "flex";

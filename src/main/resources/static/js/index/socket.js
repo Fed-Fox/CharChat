@@ -1,8 +1,10 @@
 checkCookies();
 
 function connect() {
-    let socket = new SockJS('/ws');
+    socket = new SockJS('/ws');
     stompClient = Stomp.over(socket);
+
+    document.getElementById("load-error").style.display = "none";
 
     stompClient.connect({}, onConnected, onError);
 }
@@ -23,7 +25,7 @@ function onConnected() {
                     chatsElement.insertAdjacentHTML('beforeend', getChat(chat.name, chat.status, chat.id));
                     chats.createChat(chat.id, chat);
                     chats.loadMessages(chat.id, chat.messages);
-                })
+                });
             }
 
             stompClient.subscribe(
@@ -38,6 +40,8 @@ function onConnected() {
 
 function onError() {
     document.getElementById("load-error").style.display = "flex";
+
+    window.location.reload();
 }
 
 function onReceived(payload) {

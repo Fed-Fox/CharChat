@@ -17,6 +17,7 @@ import ru.fedfox.charchat.models.message.MessageNotification;
 import ru.fedfox.charchat.models.user.User;
 import ru.fedfox.charchat.utils.KeysGeneration;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -116,6 +117,11 @@ public class Repository {
                         throw new NotFoundExeption("Индефикатор пользователя не найден");
                     }
 
+                    HashMap<String, User> usersMap = new HashMap<>();
+
+                    usersMap.put(userId, user.get());
+                    usersMap.put(soeUser.get().getId(), soeUser.get());
+
                     return new ChatNotification(
                             chat.getId(),
                             soeUser.get().getDisplayName(),
@@ -123,7 +129,7 @@ public class Repository {
                             NotificationType.NEW_CHAT,
                             getMessagesByChat(chat.getId())
                                     .stream()
-                                    .map(MessageNotification::new)
+                                    .map(message -> new MessageNotification(message, usersMap.get(message.getUserId()).getDisplayName()))
                                     .toList()
                     );
                 })

@@ -17,11 +17,12 @@ public class MessageNotification implements Notification {
     private String time;
     private NotificationType type;
 
-    public MessageNotification(Message message) {
+    public MessageNotification(Message message, String sender) {
         this.chatId = message.getChatId();
         this.content = message.getContent();
         this.time = message.getTimestamp().toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
         this.type = message.getType();
+        this.sender = sender;
     }
 
 }
