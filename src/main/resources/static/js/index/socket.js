@@ -54,17 +54,20 @@ function onReceived(payload) {
                     messagesElement.insertAdjacentHTML('beforeend', getMessageInfo(data.content));
                 }
                 chats.addMessage(data.chatId, data);
+                script("event-message-recieved");
                 break;
             case "MESSAGE":
                 if (openChatId === data.chatId) {
                     messagesElement.insertAdjacentHTML('beforeend', getMessage(data.time, data.sender, data.content));
                 }
                 chats.addMessage(data.chatId, data);
+                script("event-message-recieved");
                 break;
             case "NEW_CHAT":
                 document.getElementById("no-chats").style.display = "none";
                 chatsElement.insertAdjacentHTML('beforeend', getChat(data.name, data.status, data.id));
                 chats.createChat(data.id, data)
+                script("event-chat-create");
                 break;
         }
     } else {
@@ -165,6 +168,8 @@ function selectChat(id) {
                 item.scrollIntoView({ block: "end", behavior: "instant" });
             }, index * 10);
         });
+
+        script("event-chat-open");
     }
 }
 
@@ -207,7 +212,7 @@ function sendMessage() {
 
     if (inputElement.value.length > 500) return;
 
-    if (/[\d<>'"]/.test(inputElement.value)) return;
+    if (/[<>'"]/.test(inputElement.value)) return;
 
     messagesElement.scrollTop += 400;
 
@@ -223,6 +228,8 @@ function sendMessage() {
     inputElement.value = "";
 
     inputElement.focus();
+
+    script("event-message-send");
 }
 
 
@@ -236,7 +243,7 @@ document.addEventListener( "keydown", event => {
                     sendMessage();
                 }
             }
-        } else {
+        } else if (document.getElementById("scripts-bg").style.display === "none") {
             inputElement.focus()
         }
     } else if (event.code === "Escape") {

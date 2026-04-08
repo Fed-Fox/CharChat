@@ -127,6 +127,12 @@ menuBgElement.addEventListener('click', (event) => {
     }
 });
 
+document.getElementById("scripts-bg").addEventListener('click', (event) => {
+    if (event.target === document.getElementById("scripts-bg")) {
+        closeScripts();
+    }
+});
+
 
 
 function copyText(text) {
@@ -151,6 +157,8 @@ function openMyProfile() {
             </div>
         </div>
     `;
+
+    closeScripts();
 
     menuBgElement.style.display = "flex";
 }
@@ -179,6 +187,8 @@ function openOtherProfile() {
                 </div>
             `;
 
+            closeScripts();
+
             menuBgElement.style.display = "flex";
         })
         .catch(error => {
@@ -197,6 +207,9 @@ function openSettings() {
                         <input type="color" value="${themeColor}" id="theme">
                     </div>
                 </div>
+                <div class="menu-one-element">
+                    <p onclick="openScripts()"><span>[</span>Сценарии<span>]</span></p>
+                </div> 
             </div>
         </div>
     `;
@@ -215,6 +228,8 @@ function openSettings() {
 
         setCookie("theme", event.target.value, {expires: date});
     })
+
+    closeScripts();
 
     menuBgElement.style.display = "flex";
 }
@@ -240,12 +255,14 @@ function openCreateChat() {
     document.getElementById("tag").addEventListener("input", function(e) {
         let value = document.getElementById("tag").value;
 
-        if (value.length >= 5 && !/[\d<>/'"$%\[\]#()^&?!=+№;:*`~|\\]/.test(value)) {
+        if (value.length >= 5 && /[a-zA-Z0-9_-]+/.test(value)) {
             document.getElementById("tag").classList.remove("not-avalable");
         } else {
             document.getElementById("tag").classList.add("not-avalable");
         }
     });
+
+    closeScripts();
 
     menuBgElement.style.display = "flex";
 }

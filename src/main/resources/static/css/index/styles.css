@@ -514,3 +514,115 @@ main {
         color: var(--text-ligth-gray);
     }
 }
+
+/* Сценарии */
+
+.scripts-bg {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    justify-content: end;
+    align-items: center;
+}
+
+.scripts {
+    width: 600px;
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    border-left: 1px solid var(--bg-border);
+    background-color: var(--bg);
+
+    & h4 {
+        color: var(--text-not-avalable);
+    }
+
+    & h5 {
+        color: var(--text-5);
+    }
+
+    & info {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        padding: 10px;
+
+        & h2 {
+            align-self: start;
+            color: var(--text-5);
+            cursor: pointer;
+        }
+
+        & a {
+            color: var(--text-5);
+            display: flex;
+            gap: 5px;
+            align-self: end;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            text-decoration: none;
+
+            & span {
+                color: transparent;
+            }
+
+            &:hover span {
+                color: var(--text-gray);
+            }
+        }
+    }
+
+    & div {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--bg-border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+
+        & h1 {
+            color: var(--text-white);
+        }
+
+        & textarea {
+            width: 100%;
+            resize: vertical;
+            background-color: var(--bg);
+            border: 1px solid var(--bg-border);
+            color: var(--text-1);
+            outline: none;
+            height: 80px;
+        }
+
+        & p {
+            color: var(--text-5);
+            display: flex;
+            gap: 5px;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+
+            & span {
+                color: transparent;
+            }
+
+            &:hover span {
+                color: var(--text-gray);
+            }
+        }
+    }
+
+    &::-webkit-scrollbar {
+        width: 0;
+    }
+}
