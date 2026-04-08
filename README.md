@@ -6,10 +6,10 @@
 
 Для запуска необходима версия java 21 и выше
 
-Стандартный запуск (Сервер откроется на порте 8080 с бд на postegresql)
+Стандартный запуск (сервер откроется на порте 8080 с бд на H2)
 
-> java -jar <файл с расширением> --spring.datasource.url=<адрес с базе данных> --spring.datasource.username=<имя пользователя в базе данных>  --spring.datasource.password=<пароль пользователя>
+> java -jar <название файла с расширением>
 
-Запуск с натройкой некоторых частей программы
+Запуск, если нужна не локальная база данных или не та, что предлагается автором
 
-> java -jar <файл с расширением> --server.port=<порт> --spring.datasource.url=<адрес с базе данных> --spring.datasource.username=<имя пользователя в базе данных>  --spring.datasource.password=<пароль пользователя> --spring.datasource.driver-class-name=<драйвер для базы данных>
+> java -jar <название файла с расширением> --server.port=<порт> --spring.datasource.url=<адрес к базе данных> --spring.datasource.username=<имя пользователя в базе данных> --spring.datasource.password=<пароль пользователя> --spring.datasource.driver-class-name=<драйвер для базы данных>
